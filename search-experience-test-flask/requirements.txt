@@ -1,0 +1,12 @@
+crochet
+Flask
+flask_limiter
+lighthouse-python-plus
+matplotlib
+python-dateutil
+python-dotenv
+openai
+requests
+scrapy
+selenium
+webdriver-manager

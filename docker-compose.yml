@@ -1,0 +1,62 @@
+version: "3"
+
+services:
+  search-experience-test-flask:
+    container_name: search-experience-test-flask
+    build:
+      context: ./search-experience-test-flask
+      target: builder
+      shm_size: '2gb'
+    ports:
+      - 5000:5000
+    stop_signal: SIGINT
+    environment:
+      - FLASK_SERVER_PORT=5000
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+    volumes:
+      - ./search-experience-test-flask:/src
+  search-experience-test-react:
+    container_name: search-experience-test-react
+    hostname: search-experience-test-react
+    ports:
+      - 3000:3000
+    build:
+      context: ./search-experience-test-react
+      dockerfile: Dockerfile
+    tty: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+    volumes:
+      - ./search-experience-test-react:/app/src
+  search-experience-test-server:
+    image: nginx:latest
+    container_name: search-experience-test-server
+    depends_on:
+      - search-experience-test-flask
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    build:
+      context: ./
+      dockerfile: Dockerfile.nginx
+    volumes:
+      - nginx-data:/var/www/html
+      - ./nginx-conf:/etc/nginx/conf.d
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+    networks:
+      - external
+networks:
+  external:
+    driver: bridge
+  internal:
+    driver: bridge
+volumes:
+  nginx-data:
