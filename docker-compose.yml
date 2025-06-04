@@ -12,6 +12,11 @@ services:
     stop_signal: SIGINT
     environment:
       - FLASK_SERVER_PORT=5000
+      - REDIS_HOST=search-experience-test-redis
+      - POSTGRES_HOST=search-experience-test-postgres
+      - POSTGRES_DB=search_tests
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     logging:
       driver: "json-file"
       options:
@@ -33,6 +38,53 @@ services:
         max-size: "50m"
     volumes:
       - ./search-experience-test-react:/app/src
+  search-experience-test-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: search_tests
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./search-experience-test-postgres:/docker-entrypoint-initdb.d
+  search-experience-test-lighthouse:
+    build: ./search-experience-test-lighthouse
+    depends_on:
+      - search-experience-test-redis
+      - search-experience-test-postgres
+    environment:
+      - REDIS_HOST=search-experience-test-redis
+      - POSTGRES_HOST=search-experience-test-postgres
+      - POSTGRES_DB=search_tests
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  search-experience-test-crawler:
+    build: ./search-experience-test-crawler
+    depends_on:
+      - search-experience-test-redis
+      - search-experience-test-postgres
+    environment:
+      - REDIS_HOST=search-experience-test-redis
+      - POSTGRES_HOST=search-experience-test-postgres
+      - POSTGRES_DB=search_tests
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  search-experience-test-search:
+    build: ./search-experience-test-search
+    depends_on:
+      - search-experience-test-redis
+      - search-experience-test-postgres
+    environment:
+      - REDIS_HOST=search-experience-test-redis
+      - POSTGRES_HOST=search-experience-test-postgres
+      - POSTGRES_DB=search_tests
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  search-experience-test-redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
   search-experience-test-server:
     image: nginx:latest
     container_name: search-experience-test-server

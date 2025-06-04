@@ -2,9 +2,9 @@
 
 The Search Experience Test is a multi-part testing platform to evaluate the configuration and effectiveness of a website's search integration, search result page features, search relevance, site crawlability, accessibility, and other performance characteristics.
 
-The Search Experience Test runs on Docker and includes a Flask API and React front end to run Search Experience Tests. Tests are run using Selenium, Google Lighthouse, Scrapy, and OpenAI.
+The Search Experience Test runs on Docker and includes a Flask API, Redis queue, and React front end to run Search Experience Tests. Tests are run using Playwright, Google Lighthouse, Scrapy, and OpenAI.
 
-Run `docker-compose up --build` to start the Docker container and various services. This maay take some time to download and configure the various dependencies.
+Run `docker-compose up --build` to start the Docker container and various services. This may take some time to download and configure the various dependencies.
 
 ## How It Works
 

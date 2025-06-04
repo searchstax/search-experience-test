@@ -1,0 +1,7 @@
+asyncio
+crochet
+python-dateutil
+psycopg2-binary
+redis
+requests
+scrapy

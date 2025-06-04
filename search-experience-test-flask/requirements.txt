@@ -1,12 +1,6 @@
-crochet
 Flask
 flask_limiter
-lighthouse-python-plus
-matplotlib
+psycopg2
 python-dateutil
-python-dotenv
-openai
+redis
 requests
-scrapy
-selenium
-webdriver-manager

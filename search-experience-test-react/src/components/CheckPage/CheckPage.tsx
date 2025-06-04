@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { checkURL, checkRelevance, checkFeatures } from '../../api/check';
+import { testURL, getStatus, getTest } from '../../api/test';
 
 import SearchStart from '../SearchStart/SearchStart';
 import SearchResults from '../SearchResults/SearchResults';
 import KeywordRelevance from '../KeywordRelevance/KeywordRelevance';
 import SearchPage from '../SearchPage/SearchPage';
+import SearchScore from '../SearchScore/SearchScore';
+import TestHistory from '../TestHistory/TestHistory';
 
 // Joy
 import Alert from '@mui/joy/Alert';
@@ -13,9 +16,9 @@ import AspectRatio from '@mui/joy/AspectRatio';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
 import Card from '@mui/joy/Card';
-import Checkbox from '@mui/joy/Checkbox';
 import CircularProgress from '@mui/joy/CircularProgress';
-import Divider from '@mui/joy/Divider';
+import Chip from '@mui/joy/Chip';
+import ChipDelete from '@mui/joy/ChipDelete';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import FormHelperText from '@mui/joy/FormHelperText';
@@ -28,132 +31,100 @@ import StepIndicator from '@mui/joy/StepIndicator';
 import Stepper from '@mui/joy/Stepper';
 import Typography from '@mui/joy/Typography';
 
-// Icons
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
-import WarningIcon from '@mui/icons-material/Warning';
+let testChecker = setTimeout(() => {}, 0);
 
-const defaultKeywordRelevancy = [
-	{keyword: 'apply', data: {}},
-	{keyword: 'financial aid', data: {}},
-	{keyword: 'parking', data: {}},
+const defaultSearchTerms = [
+	'apply',
+	'parking',
 ];
 
 function CheckPage() {
   const [requestURL, setRequestURL] = useState<string>('');
   const [requestURLValid, setRequestURLValid] = useState<boolean | undefined>(undefined);
+  const [searchTerms, setSearchTerms] = useState<string[]>(defaultSearchTerms);
+  const [newSearchTerm, setNewSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [checkSuccess, setCheckSuccess] = useState<boolean | undefined>(undefined);
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [testStatus, setTestStatus] = useState<any | undefined>(undefined);
 	const [pageData, setPageData] = useState<any | undefined>(undefined);
-	const [searchFeatures, setSearchFeatures] = useState<any | undefined>(undefined);
-	const [crawlQuality, setCrawlQuality] = useState<any | undefined>(undefined);
 	const [apiError, setApiError] = useState<string>('');
+ 
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-	const [hasAutosuggest, setHasAutosuggest] = useState<boolean | undefined>(undefined);
-	const [hasSpellchecking, setHasSpellchecking] = useState<boolean | undefined>(undefined);
-	
-	const [keywordRelevancy, setKeywordRelevancy] = useState<any>(defaultKeywordRelevancy);
-
-	let searchScore = 0;
-	let maxScore = 300;
-
-	if (hasAutosuggest !== undefined) {
-		searchScore = searchScore + (hasAutosuggest ? 100 : 0);
-		maxScore = maxScore + 100;
-	}
-	if (hasSpellchecking !== undefined) {
-		searchScore = searchScore + (hasSpellchecking ? 100 : 0);
-		maxScore = maxScore + 100;
-	}
-
-	if (searchFeatures !== undefined) {
-		searchScore = searchScore + (searchFeatures.autosuggest ? 100 : 0);
-		searchScore = searchScore + (searchFeatures.spellchecking ? 100 : 0);
-		searchScore = searchScore + (searchFeatures.analytics ? 100 : 0);
-		maxScore = maxScore + 300
-	}
-
-	if (crawlQuality !== undefined) {
-		searchScore = searchScore + (crawlQuality.titledescription ? 100 : 0);
-		searchScore = searchScore + (crawlQuality.metatags ? 100 : 0);
-		searchScore = searchScore + (crawlQuality.images ? 100 : 0);
-		maxScore = maxScore + 300
-	}
-
-	keywordRelevancy.map((keywordData: any) => {
-		if (keywordData?.data?.searchpage?.searchQuality !== undefined) {
-			searchScore = searchScore + keywordData?.data?.searchpage?.searchQuality[0]?.quality?.relevancy_score * 10;
-			maxScore = maxScore + 100;
-		}
-	});
-	searchScore = ((searchScore
-							+ ((pageData?.pagespeed?.score?.performance | 0) * 100)
-							+ ((pageData?.pagespeed?.score?.seo | 0) * 100)
-							+ ((pageData?.pagespeed?.score?.wcag | 0) * 100)
-							+ (pageData?.searchpage?.sitesearch?.height !== 0 ? 100 : 0)
-						) / maxScore) * 100;
+  useEffect(() => {
+    const test = searchParams.get('test');
+    if (test !== null) {
+			setCheckSuccess(true);
+      pollTest(test);
+    }
+  }, [searchParams]);
 
   const checkPage = (): void => {
 		setLoading(true);
 		setCheckSuccess(undefined);
 		setPageData(undefined);
-		setSearchFeatures(undefined);
 		setApiError('');
-		void checkURL(requestURL).then(response => {
+		
+		void testURL(requestURL, searchTerms.join(',')).then(response => {
 			setCheckSuccess(true);
-			setPageData(response.data);
-			setLoading(false);
+			if (response?.testID !== '') {
+				pollTest(response.testID);
+				navigate(`?test=${response.testID}`);
+			}
 		}).catch((error: Error) => {
 			setLoading(false);
 			setCheckSuccess(false);
 			setApiError('Too many requests');
-			console.log(error);
+			console.error(error);
 		});
   }
-
-  const checkKeywordRelevance = (keyword: string): Promise<any> => {
-		setApiError('');
-		return checkRelevance(pageData?.searchpage?.searchURL, keyword).then(response => {
-			setKeywordRelevancy([
-				...keywordRelevancy.map((keywordData: any) => {
-					if (keywordData.keyword === keyword) {
-						return {
-							keyword: keywordData.keyword,
-							data: response.data
-						}
-					}
-					else {
-						return keywordData
-					}
-				})
-			]);
-		}).catch((error: Error) => {
-			setApiError('Could not get relevance data');
-			console.log(error);
-		});
+  
+  const pollTest = (id: string): void => {
+	  void getStatus(id).then(response => {
+		  if (response.testID !== '') {
+				if (response.search?.status !== testStatus?.search?.status
+					|| response.crawl?.status !== testStatus?.crawl?.status
+					|| response.lighthouse?.status !== testStatus?.lighthouse?.status
+				) {
+					loadTest(id);
+				}
+				setTestStatus(response);
+			  if (response.search?.status === 2) {
+					clearTimeout(testChecker);
+					setLoading(false);
+			  }
+			  if (response?.search?.status === 1) {
+					clearTimeout(testChecker);
+					setTimeout(() => {
+						pollTest(id);
+					}, 2000);
+			  }
+			  if (response?.search?.status && response.search.status < 0) {
+					clearTimeout(testChecker);
+					setLoading(false);
+			  }
+		  }
+	  });
   }
 
-	const checkSearchFeatures = (): Promise<any> => {
-		setApiError('');
-		return checkFeatures(pageData?.searchpage?.searchURL).then(response => {
-			setSearchFeatures(response?.data?.searchpage?.searchFeatures);
-		}).catch((error: Error) => {
-			setApiError('Could not get search features');
-			console.log(error);
-		});
+  const loadTest = (id: string): void => {
+	  void getTest(id).then(response => {
+		  if (response.testID !== '') {
+				setPageData(response);
+		  }
+	  });
   }
 
   const reset = (): void => {
 		setLoading(false);
 		setCheckSuccess(undefined);
 		setPageData(undefined);
-		setSearchFeatures(undefined);
 		setApiError('');
 		setCurrentStep(1);
-		setPageData(undefined);
-		setKeywordRelevancy(defaultKeywordRelevancy);
-
+		clearTimeout(testChecker);
+		navigate(`/`);
   }
 
   return (
@@ -171,7 +142,7 @@ function CheckPage() {
 					</Stack>
 					<Card size="lg" sx={{minWidth: 400, maxWidth: 600}}>
 						<Stack spacing={2}>
-							<FormControl sx={{height: 80}}>
+							<FormControl>
 								<FormLabel>
 								  Search Page URL
 								</FormLabel>
@@ -196,6 +167,47 @@ function CheckPage() {
 								  </FormHelperText>
 								)}
 							</FormControl>
+							<Card>
+								<Typography level="body-sm">
+									Test Search Queries
+								</Typography>
+								<Stack spacing={0.5}>
+									{searchTerms.map((term: any, index: number) => (
+										<Chip
+							      	key={index}
+							        size="sm"
+							        variant="outlined"
+							        endDecorator={
+							        	<ChipDelete
+							        		onDelete={() => {
+							        			setSearchTerms(searchTerms.filter(item => item !== term))
+							        		}}
+							        	/>
+							        }
+							      >
+											{term}
+							      </Chip>
+									))}
+									{searchTerms.length < 4 && (
+										<Input
+											size="sm"
+											value={newSearchTerm}
+											onChange={(_e) => setNewSearchTerm(_e.target.value)}
+											endDecorator={
+												<Button
+													disabled={newSearchTerm === '' || searchTerms.includes(newSearchTerm)}
+													onClick={() => {
+														setSearchTerms([...searchTerms, newSearchTerm]);
+														setNewSearchTerm('');
+													}}
+												>
+													Add
+												</Button>
+											}
+										/>
+									)}
+								</Stack>
+							</Card>
 							<Button
 								onClick={(_e) => { checkPage()}}
 								loading={loading}
@@ -205,6 +217,7 @@ function CheckPage() {
 							</Button>
 						</Stack>
 					</Card>
+					<TestHistory />
 				</Stack>
 			)}
 			<Stack spacing={1}>
@@ -268,7 +281,11 @@ function CheckPage() {
 										  	orientation="vertical"
 										    indicator={
 										      <StepIndicator variant={currentStep === 1 ? 'solid' : 'outlined'}>
-										        1
+										      	{pageData.search?.status === 1 ? (
+											      	<CircularProgress size="sm" sx={{fontSize: 16}}>
+												        1
+												      </CircularProgress>
+												     ) : '1'}
 										      </StepIndicator>
 										    }
 										  >
@@ -278,7 +295,13 @@ function CheckPage() {
 										  	completed={currentStep > 2}
 										  	orientation="vertical"
 										  	indicator={
-										  		<StepIndicator variant={currentStep === 2 ? 'solid' : 'outlined'}>2</StepIndicator>
+										  		<StepIndicator variant={currentStep === 2 ? 'solid' : 'outlined'}>
+										      	{pageData.search?.status === 1 ? (
+											      	<CircularProgress size="sm" sx={{fontSize: 16}}>
+												        2
+												      </CircularProgress>
+												     ) : '2'}
+										      </StepIndicator>
 										  	}
 										  >
 										    Initial Search Results
@@ -287,7 +310,13 @@ function CheckPage() {
 										  	completed={currentStep > 3}
 										  	orientation="vertical"
 										  	indicator={
-										  		<StepIndicator variant={currentStep === 3 ? 'solid' : 'outlined'}>3</StepIndicator>
+										  		<StepIndicator variant={currentStep === 3 ? 'solid' : 'outlined'}>
+										      	{pageData.stage === 3 ? (
+											      	<CircularProgress size="sm" sx={{fontSize: 16}}>
+												        3
+												      </CircularProgress>
+												     ) : '3'}
+										      </StepIndicator>
 										  	}
 										  >
 										  	Search Relevance
@@ -296,7 +325,13 @@ function CheckPage() {
 										  	completed={currentStep > 4}
 										  	orientation="vertical"
 										  	indicator={
-										  		<StepIndicator variant={currentStep === 4 ? 'solid' : 'outlined'}>4</StepIndicator>
+										  		<StepIndicator variant={currentStep === 4 ? 'solid' : 'outlined'}>
+										      	{pageData.crawl?.status === 1 ? (
+											      	<CircularProgress size="sm" sx={{fontSize: 16}}>
+												        4
+												      </CircularProgress>
+												     ) : '4'}
+										      </StepIndicator>
 										  	}
 										  >
 										  	Site Crawl
@@ -305,7 +340,13 @@ function CheckPage() {
 										  	completed={currentStep > 5}
 										  	orientation="vertical"
 										  	indicator={
-										  		<StepIndicator variant={currentStep === 5 ? 'solid' : 'outlined'}>5</StepIndicator>
+										  		<StepIndicator variant={currentStep === 5 ? 'solid' : 'outlined'}>
+										      	{pageData.crawl?.status === 1 || pageData.lighthouse.status === 1 || pageData.search.status === 1 ? (
+											      	<CircularProgress size="sm" sx={{fontSize: 16}}>
+												        5
+												      </CircularProgress>
+												     ) : '5'}
+										      </StepIndicator>
 										  	}
 										  >
 										  	Search Experience Score
@@ -333,8 +374,6 @@ function CheckPage() {
 							{currentStep === 2 && (
 								<SearchResults
 									pageData={pageData}
-									searchFeatures={searchFeatures}
-									checkSearchFeaturesCallback={checkSearchFeatures}
 								/>
 							)}
 							{currentStep === 3 && (
@@ -344,13 +383,12 @@ function CheckPage() {
 											Search Relevance
 										</Typography>
 									</Grid>
-									{pageData?.searchpage?.searchURL && (
-										keywordRelevancy.map((keywordData: any, index: number) => (
+									{pageData?.search?.data?.searchpage?.searchURL && (
+										pageData?.search?.data?.searchQuality.map((keywordData: any, index: number) => (
 											<KeywordRelevance
 												key={index}
 												pageData={pageData}
 												relevanceData={keywordData}
-												checkRelevanceCallback={checkKeywordRelevance}
 											/>
 										))
 									)}
@@ -358,358 +396,11 @@ function CheckPage() {
 							)}
 							<Box sx={{display: currentStep === 4 ? 'block': 'none'}}>
 								<SearchPage
-									startURL={requestURL}
 									pageData={pageData}
-									crawlQualityCallback={setCrawlQuality}
 								/>
 							</Box>
 							{currentStep === 5 && (
-								<Box>
-									<Stack
-										divider={<Divider />}
-										spacing={3}
-									>
-										<Stack>
-											<Typography level="h3">
-												Finding Your Site Search
-											</Typography>
-											<Grid container rowSpacing={2} alignItems="center">
-												<Grid xs={8}>
-													<Typography>
-														Google SEO Score
-													</Typography>
-												</Grid>
-												<Grid xs={3}>
-													<LinearProgress
-														determinate
-														value={pageData?.pagespeed?.score?.seo * 100}
-														color={
-															pageData?.pagespeed?.score?.seo > 0.9
-															? 'success'
-															: pageData?.pagespeed?.score?.seo > 0.7
-															? 'warning' : 'danger'
-														}
-													/>
-												</Grid>
-												<Grid xs={1}>
-													<Typography sx={{textAlign: 'right'}}>
-														{((pageData?.pagespeed?.score?.seo || 0) * 100).toFixed(0)}
-													</Typography>
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Page Load Speed
-													</Typography>
-												</Grid>
-												<Grid xs={3}>
-													<LinearProgress
-														determinate
-														value={pageData?.pagespeed?.score?.performance * 100}
-														color={
-															pageData?.pagespeed?.score?.performance > 0.9
-															? 'success'
-															: pageData?.pagespeed?.score?.performance > 0.7
-															? 'warning' : 'danger'
-														}
-													/>
-												</Grid>
-												<Grid xs={1}>
-													<Typography sx={{textAlign: 'right'}}>
-														{((pageData?.pagespeed?.score?.performance || 0) * 100).toFixed(0)}
-													</Typography>
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Site Search Bar
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{pageData?.searchpage?.sitesearch?.height !== 0 ? (
-														<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-															Search Bar Found
-														</Alert>
-													) : (
-														<Alert endDecorator={<WarningIcon />} color="warning">
-															Could not find search bar
-														</Alert>
-													)}
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Site Search Schema
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{Object.keys(pageData?.schema).length !== 0 ? (
-														<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-															Found Schema
-														</Alert>
-													) : (
-														<Alert endDecorator={<WarningIcon />} color="warning">
-															No Search Schema Found
-														</Alert>
-													)}
-												</Grid>
-											</Grid>
-										</Stack>
-										<Stack>
-											<Typography level="h3">
-												Search Result Page
-											</Typography>
-											<Grid container alignItems="center" rowSpacing={2}>
-												<Grid xs={8}>
-													<Typography>
-														WCAG Accessibility
-													</Typography>
-												</Grid>
-												<Grid xs={3}>
-													<LinearProgress
-														determinate
-														value={pageData?.pagespeed?.score?.accessibility * 100}
-														color={
-															pageData?.pagespeed?.score?.accessibility > 0.9
-															? 'success'
-															: pageData?.pagespeed?.score?.accessibility > 0.7
-															? 'warning' : 'danger'
-														}
-													/>
-												</Grid>
-												<Grid xs={1}>
-													<Typography sx={{textAlign: 'right'}}>
-														{((pageData?.pagespeed?.score?.accessibility || 0) * 100).toFixed(0)}
-													</Typography>
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Auto Suggest
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{searchFeatures
-														? searchFeatures.autocomplete ? (
-															<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-																Autosuggest found!
-															</Alert>
-														) : (
-															<Alert endDecorator={<HelpRoundedIcon />}>
-																Not detected
-															</Alert>
-														)
-													: (
-														<Alert endDecorator={
-															<Checkbox
-																checked={hasAutosuggest}
-																onClick={() => setHasAutosuggest(!hasAutosuggest)}
-																indeterminate={hasAutosuggest === undefined}
-															/>
-														}>
-															Not Tested
-														</Alert>
-													)}
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Spell Checking
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{searchFeatures
-														? searchFeatures.spellchecking ? (
-															<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-																Spell checking found!
-															</Alert>
-														) : (
-															<Alert endDecorator={<HelpRoundedIcon />}>
-																Not detected
-															</Alert>
-														)
-													: (
-														<Alert endDecorator={
-															<Checkbox
-																checked={hasSpellchecking}
-																onClick={() => setHasSpellchecking(!hasSpellchecking)}
-																indeterminate={hasSpellchecking === undefined}
-															/>
-														}>
-															Not Tested
-														</Alert>
-													)}
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Analytics
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{searchFeatures
-														? searchFeatures.analytics ? (
-															<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-																Analytics found!
-															</Alert>
-														) : (
-															<Alert endDecorator={<HelpRoundedIcon />}>
-																Not detected
-															</Alert>
-														)
-													: (
-														<Alert>
-															Not Tested
-														</Alert>
-													)}
-												</Grid>
-											</Grid>
-										</Stack>
-										<Stack>
-											<Typography level="h3">
-												Search Relevancy
-											</Typography>
-											<Grid container rowSpacing={1}>
-												{keywordRelevancy.map((keywordData: any, index: number) => (
-													keywordData?.data?.searchpage?.searchQuality !== undefined ? (
-														<Grid container xs={12} key={index} alignItems="center">
-															<Grid xs={8}>
-																<Typography>
-																	Relevancy for "{keywordData.keyword}"
-																</Typography>
-															</Grid>
-															<Grid xs={3}>
-																<LinearProgress
-																	determinate
-																	value={keywordData?.data?.searchpage?.searchQuality[0]?.quality?.relevancy_score * 10}
-																	color={
-																		keywordData?.data?.searchpage?.searchQuality[0]?.quality?.relevancy_score > 9
-																		? 'success'
-																		: keywordData?.data?.searchpage?.searchQuality[0]?.quality?.relevancy_score > 7
-																		? 'warning' : 'danger'
-																	}
-																/>
-															</Grid>
-															<Grid xs={1}>
-																<Typography sx={{textAlign: 'right'}}>
-																	{keywordData?.data?.searchpage?.searchQuality[0]?.quality?.relevancy_score > 8
-																		? keywordData?.data?.searchpage?.searchQuality[0]?.quality?.relevancy_score > 7
-																		? 'High' : 'Medium': 'Low'
-																	}
-																</Typography>
-															</Grid>
-														</Grid>
-													) : (
-														<Grid container xs={12} key={index} alignItems="center">
-															<Grid xs={8}>
-																<Typography>
-																	Relevancy for "{keywordData.keyword}"
-																</Typography>
-															</Grid>
-															<Grid xs={4}>
-																<Alert endDecorator={<HelpRoundedIcon />}>
-																	Keyword Relevancy Not Tested
-																</Alert>
-															</Grid>
-														</Grid>
-													)
-												))}
-											</Grid>
-										</Stack>
-										<Stack>
-											<Typography level="h3">
-												Site Crawl
-											</Typography>
-											<Grid container alignItems="center" rowSpacing={2}>
-												<Grid xs={8}>
-													<Typography>
-														Titles and Descriptions
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{crawlQuality
-														? crawlQuality.titledescription ? (
-															<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-																Descriptive titles and meta descriptions
-															</Alert>
-														) : (
-															<Alert endDecorator={<WarningIcon />} color="warning">
-																Some missing titles and descriptions
-															</Alert>
-														)
-													: (
-														<Alert>
-															Not Tested
-														</Alert>
-													)}
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Meta Tags
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{crawlQuality
-														? crawlQuality.metadata ? (
-															<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-																Contextual meta tags discovered
-															</Alert>
-														) : (
-															<Alert endDecorator={<HelpRoundedIcon />}>
-																Not detected
-															</Alert>
-														)
-													: (
-														<Alert>
-															Not Tested
-														</Alert>
-													)}
-												</Grid>
-												<Grid xs={8}>
-													<Typography>
-														Images
-													</Typography>
-												</Grid>
-												<Grid xs={4}>
-													{crawlQuality
-														? crawlQuality.images ? (
-															<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
-																Thumbnail images
-															</Alert>
-														) : (
-															<Alert endDecorator={<HelpRoundedIcon />}>
-																Not detected
-															</Alert>
-														)
-													: (
-														<Alert>
-															Not Tested
-														</Alert>
-													)}
-												</Grid>
-											</Grid>
-										</Stack>
-										<Stack direction="row">
-											<Grid container xs={12} alignItems="center">
-												<Grid xs={8}>
-													<Typography level="h3">
-														Search Experience Score
-													</Typography>
-												</Grid>
-												<Grid xs={4} sx={{textAlign: 'right'}}>
-													<CircularProgress
-														determinate
-														size="lg"
-														value={searchScore}
-														color={
-															searchScore > 90
-															? 'success'
-															: searchScore > 70
-															? 'warning' : 'danger'
-														}
-													>
-													  {(searchScore).toFixed(0)}
-													</CircularProgress>
-												</Grid>
-											</Grid>
-										</Stack>
-									</Stack>
-
-								</Box>
+								<SearchScore pageData={pageData} />
 							)}
 						</Stack>
 					)

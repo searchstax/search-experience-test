@@ -1,10 +1,7 @@
-import { useState } from 'react'
-
 // Joy
 import Alert from '@mui/joy/Alert';
 import AspectRatio from '@mui/joy/AspectRatio';
 import Box from '@mui/joy/Box';
-import Button from '@mui/joy/Button';
 import Grid from '@mui/joy/Grid';
 import LinearProgress from '@mui/joy/LinearProgress';
 import Stack from '@mui/joy/Stack';
@@ -17,27 +14,11 @@ import WarningIcon from '@mui/icons-material/Warning';
 
 function SearchResults(props: {
 	pageData: any | undefined,
-	searchFeatures: any | undefined,
-	checkSearchFeaturesCallback: () => Promise<any> | undefined,
 }) {
 	const {
 		pageData = undefined,
-		searchFeatures = undefined,
-		checkSearchFeaturesCallback = undefined,
 	} = props;
-  const [loading, setLoading] = useState<boolean>(false);
 	
-	const checkSearchFeatures = async () => {
-		if (checkSearchFeaturesCallback) {
-			setLoading(true);
-			await checkSearchFeaturesCallback()?.then(async () => {
-				setLoading(false);
-	    }).catch((error: Error) => {
-				console.log('Could not get relevance data', error);
-			});
-		}
-  }
-
   return (
     <Box
       sx={{
@@ -54,7 +35,7 @@ function SearchResults(props: {
 									Site Search Page
 								</Typography>
 							</Grid>
-							{pageData?.searchpage?.searchURL ? (
+							{pageData?.search?.data?.searchpage?.searchURL ? (
 								<Grid container xs={12}>
 									<Grid xs={5}>
 										<Typography>
@@ -63,7 +44,7 @@ function SearchResults(props: {
 									</Grid>
 									<Grid xs={7}>
 										<Typography>
-											{pageData?.searchpage?.searchURL}
+											{pageData?.search?.data?.searchpage?.searchURL}
 										</Typography>
 									</Grid>
 								</Grid>
@@ -94,20 +75,20 @@ function SearchResults(props: {
 								</Typography>
 							</Grid>
 							<Grid xs={7}>
-								{pageData?.pagespeed?.score?.performance
+								{pageData?.lighthouse?.data?.performance
 									?	<Stack direction="row" alignItems="center" spacing={1}>
 											<LinearProgress
 												determinate
-												value={pageData?.pagespeed?.score?.performance * 100}
+												value={pageData?.lighthouse?.data?.performance * 100}
 												color={
-													pageData?.pagespeed?.score?.performance > 0.9
+													pageData?.lighthouse?.data?.performance > 0.9
 													? 'success'
-													: pageData?.pagespeed?.score?.performance > 0.7
+													: pageData?.lighthouse?.data?.performance > 0.7
 													? 'warning' : 'danger'
 												}
 											/>
 											<Typography>
-											  {(pageData?.pagespeed?.score?.performance * 100).toFixed(0)}
+											  {(pageData?.lighthouse?.data?.performance * 100).toFixed(0)}
 											</Typography>
 										</Stack>
 									: <Typography>
@@ -128,20 +109,20 @@ function SearchResults(props: {
 								</Typography>
 							</Grid>
 							<Grid xs={7}>
-								{pageData?.pagespeed?.score?.accessibility
+								{pageData?.lighthouse?.data?.accessibility
 									?	<Stack direction="row" alignItems="center" spacing={1}>
 											<LinearProgress
 												determinate
-												value={pageData?.pagespeed?.score?.accessibility * 100}
+												value={pageData?.lighthouse?.data?.accessibility * 100}
 												color={
-													pageData?.pagespeed?.score?.accessibility > 0.9
+													pageData?.lighthouse?.data?.accessibility > 0.9
 													? 'success'
-													: pageData?.pagespeed?.score?.accessibility > 0.7
+													: pageData?.lighthouse?.data?.accessibility > 0.7
 													? 'warning' : 'danger'
 												}
 											/>
 											<Typography>
-											  {(pageData?.pagespeed?.score?.accessibility * 100).toFixed(0)}
+											  {(pageData?.lighthouse?.data?.accessibility * 100).toFixed(0)}
 											</Typography>
 										</Stack>
 									: <Typography>
@@ -155,15 +136,6 @@ function SearchResults(props: {
 								<Typography level="h4">
 									Search Page Features
 								</Typography>
-								{searchFeatures === undefined && (
-									<Button
-										onClick={checkSearchFeatures}
-										disabled={loading || pageData?.searchpage?.searchURL === ''}
-										loading={loading}
-									>
-										Check Now
-									</Button>
-								)}
 							</Grid>
 							<Grid xs={5}>
 								<Typography>
@@ -171,8 +143,8 @@ function SearchResults(props: {
 								</Typography>
 							</Grid>
 							<Grid xs={7}>
-								{searchFeatures
-									? searchFeatures.autocomplete ? (
+								{pageData?.search?.data?.searchFeatures
+									? pageData?.search?.data?.searchFeatures?.autocomplete ? (
 										<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
 											Autosuggest found!
 										</Alert>
@@ -193,8 +165,8 @@ function SearchResults(props: {
 								</Typography>
 							</Grid>
 							<Grid xs={7}>
-								{searchFeatures
-									? searchFeatures.spellchecking ? (
+								{pageData?.search?.data?.searchFeatures
+									? pageData?.search?.data?.searchFeatures?.spellchecking ? (
 										<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
 											Spell checking found!
 										</Alert>
@@ -215,8 +187,8 @@ function SearchResults(props: {
 								</Typography>
 							</Grid>
 							<Grid xs={7}>
-								{searchFeatures
-									? searchFeatures.analytics ? (
+								{pageData?.search?.data?.searchFeatures
+									? pageData?.search?.data?.analytics ? (
 										<Alert endDecorator={<CheckCircleRoundedIcon />} color="success">
 											Google Analytics found!
 										</Alert>
@@ -235,10 +207,10 @@ function SearchResults(props: {
 					</Grid>
 					<Grid xs={6}>
 						<AspectRatio sx={{ minWidth: 300 }}>
-							{pageData?.screenshots?.search !== '' ? (
+							{pageData?.search?.data?.screenshots?.search !== '' ? (
 								<Box
 									component='img'
-									src={`data:image/png;base64, ${pageData?.screenshots?.search}`}
+									src={`data:image/png;base64, ${pageData?.search?.data?.screenshots?.search}`}
 									sx={{
 										border: 'solid',
 										borderWidth: 1,

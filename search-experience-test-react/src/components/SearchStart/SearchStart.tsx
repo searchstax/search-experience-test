@@ -12,12 +12,11 @@ import Typography from '@mui/joy/Typography';
 import WarningIcon from '@mui/icons-material/Warning';
 
 function SearchStart(props: {
-	pageData: any | undefined
+	pageData: any | undefined,
 }) {
 	const {
 		pageData = undefined,
 	} = props;
-
   return (
     <Box
       sx={{
@@ -41,7 +40,7 @@ function SearchStart(props: {
 							</Grid>
 							<Grid xs={7}>
 								<Typography>
-									{pageData?.searchpage?.startURL}
+									{pageData?.search?.data?.searchpage?.startURL}
 								</Typography>
 							</Grid>
 						</Grid>
@@ -56,13 +55,13 @@ function SearchStart(props: {
 									Search Bar
 								</Typography>
 							</Grid>
-							{pageData?.searchpage?.sitesearch?.height !== 0 ? (
+							{pageData?.search?.data?.searchpage?.sitesearch?.height !== 0 ? (
 								<Grid xs={7}>
 									<Typography>
-										{pageData?.searchpage?.sitesearch?.height}px x {pageData?.searchpage?.sitesearch?.width}px
+										{pageData?.search?.data?.searchpage?.sitesearch?.height}px x {pageData?.search?.data?.searchpage?.sitesearch?.width}px
 									</Typography>
 									<Typography>
-										Search bar occupies <Typography sx={{fontWeight: 700}}>{(pageData?.searchpage?.sitesearch?.coverage * 100).toFixed(1)}%</Typography> of above the fold area
+										Search bar occupies <Typography sx={{fontWeight: 700}}>{(pageData?.search?.data?.searchpage?.sitesearch?.coverage * 100).toFixed(1)}%</Typography> of above the fold area
 									</Typography>
 								</Grid>
 							) : (
@@ -77,7 +76,7 @@ function SearchStart(props: {
 									Schema Tagging
 								</Typography>
 							</Grid>
-							{Object.keys(pageData?.schema).length !== 0 ? (
+							{pageData?.schema && Object.keys(pageData?.schema).length !== 0 ? (
 								<Grid xs={7}>
 									<Typography>
 										{pageData?.searchpage?.sitesearch?.height}px x {pageData?.searchpage?.sitesearch?.width}px
@@ -100,7 +99,7 @@ function SearchStart(props: {
 							</Grid>
 							<Grid xs={7}>
 								<Typography>
-									{pageData?.searchpage?.searchURL}
+									{pageData?.search?.data?.searchpage?.searchURL}
 								</Typography>
 							</Grid>
 						</Grid>
@@ -116,20 +115,20 @@ function SearchStart(props: {
 								</Typography>
 							</Grid>
 							<Grid xs={7}>
-								{pageData?.pagespeed?.score?.performance
+								{pageData?.lighthouse?.data?.performance
 									?	<Stack direction="row" alignItems="center" spacing={1}>
 											<LinearProgress
 												determinate
-												value={pageData?.pagespeed?.score?.performance * 100}
+												value={pageData?.lighthouse?.data?.performance * 100}
 												color={
-													pageData?.pagespeed?.score?.performance > 0.9
+													pageData?.lighthouse?.data?.performance > 0.9
 													? 'success'
-													: pageData?.pagespeed?.score?.performance > 0.7
+													: pageData?.lighthouse?.data?.performance > 0.7
 													? 'warning' : 'danger'
 												}
 											/>
 											<Typography>
-											  {(pageData?.pagespeed?.score?.performance * 100).toFixed(0)}
+											  {(pageData?.lighthouse?.data?.performance * 100).toFixed(0)}
 											</Typography>
 										</Stack>
 									: 
@@ -151,20 +150,20 @@ function SearchStart(props: {
 								</Typography>
 							</Grid>
 							<Grid xs={7}>
-								{pageData?.pagespeed?.score?.seo
+								{pageData?.lighthouse?.data?.seo
 									?	<Stack direction="row" alignItems="center" spacing={1}>
 											<LinearProgress
 												determinate
-												value={pageData?.pagespeed?.score?.seo * 100}
+												value={pageData?.lighthouse?.data?.seo * 100}
 												color={
-													pageData?.pagespeed?.score?.seo > 0.9
+													pageData?.lighthouse?.data?.seo > 0.9
 													? 'success'
-													: pageData?.pagespeed?.score?.seo > 0.7
+													: pageData?.lighthouse?.data?.seo > 0.7
 													? 'warning' : 'danger'
 												}
 											/>
 											<Typography>
-											  {(pageData?.pagespeed?.score?.seo * 100).toFixed(0)}
+											  {(pageData?.lighthouse?.data?.seo * 100).toFixed(0)}
 											</Typography>
 										</Stack>
 									: 
@@ -179,7 +178,7 @@ function SearchStart(props: {
 						<AspectRatio sx={{ minWidth: 300 }}>
 							<Box
 								component='img'
-								src={`data:image/png;base64, ${pageData?.screenshots.original}`}
+								src={`data:image/png;base64, ${pageData?.search?.data?.screenshots?.original}`}
 								sx={{
 									border: 'solid',
 									borderWidth: 1,

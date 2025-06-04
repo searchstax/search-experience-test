@@ -1,0 +1,11 @@
+asyncio
+Flask
+flask_limiter
+matplotlib
+python-dateutil
+python-dotenv
+openai
+playwright
+psycopg2-binary
+redis
+requests

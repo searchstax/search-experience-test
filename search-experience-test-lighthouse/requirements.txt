@@ -1,0 +1,8 @@
+crochet
+lighthouse-python-plus
+matplotlib
+python-dateutil
+python-dotenv
+openai
+psycopg2-binary
+redis
