@@ -23,6 +23,9 @@ services:
         max-size: "50m"
     volumes:
       - ./search-experience-test-flask:/src
+    networks:
+      - internal
+      - external
   search-experience-test-react:
     container_name: search-experience-test-react
     hostname: search-experience-test-react
@@ -38,6 +41,8 @@ services:
         max-size: "50m"
     volumes:
       - ./search-experience-test-react:/app
+    networks:
+      - internal
   search-experience-test-postgres:
     image: postgres:15
     environment:
@@ -48,6 +53,8 @@ services:
       - "5432:5432"
     volumes:
       - ./search-experience-test-postgres:/docker-entrypoint-initdb.d
+    networks:
+      - internal
   search-experience-test-lighthouse:
     build: ./search-experience-test-lighthouse
     depends_on:
@@ -59,6 +66,8 @@ services:
       - POSTGRES_DB=search_tests
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    networks:
+      - internal
   search-experience-test-crawler:
     build: ./search-experience-test-crawler
     depends_on:
@@ -70,6 +79,8 @@ services:
       - POSTGRES_DB=search_tests
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    networks:
+      - internal
   search-experience-test-search:
     build: ./search-experience-test-search
     depends_on:
@@ -81,12 +92,16 @@ services:
       - POSTGRES_DB=search_tests
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    networks:
+      - internal
   search-experience-test-redis:
     image: redis:alpine
     ports:
       - "6379:6379"
     volumes:
       - ./search-experience-test-redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - internal
   search-experience-test-nginx:
     image: nginx:latest
     container_name: search-experience-test-nginx
