@@ -37,7 +37,7 @@ services:
       options:
         max-size: "50m"
     volumes:
-      - ./search-experience-test-react:/app/src
+      - ./search-experience-test-react:/app
   search-experience-test-postgres:
     image: postgres:15
     environment:
@@ -85,20 +85,17 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
-  search-experience-test-server:
+    volumes:
+      - ./search-experience-test-redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+  search-experience-test-nginx:
     image: nginx:latest
-    container_name: search-experience-test-server
-    depends_on:
-      - search-experience-test-flask
+    container_name: search-experience-test-nginx
     restart: unless-stopped
     ports:
       - "80:80"
-    build:
-      context: ./
-      dockerfile: Dockerfile.nginx
     volumes:
-      - nginx-data:/var/www/html
-      - ./nginx-conf:/etc/nginx/conf.d
+      - ./search-experience-test-react/dist:/var/www/html/
+      - ./search-experience-test-nginx:/etc/nginx/conf.d
     logging:
       driver: "json-file"
       options:
@@ -110,5 +107,3 @@ networks:
     driver: bridge
   internal:
     driver: bridge
-volumes:
-  nginx-data:

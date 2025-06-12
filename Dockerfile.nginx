@@ -1,2 +1,0 @@
-FROM nginx
-COPY ./search-experience-test-react/dist /var/www/html/
