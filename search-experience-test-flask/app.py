@@ -143,8 +143,8 @@ def load_test():
             },
             'lighthouse': {
                 'status': lighthouse_result[0] if lighthouse_result else -1,
-                'data': json.loads(lighthouse_result[1] or {}),
-                'score': json.loads(lighthouse_result[2] or {}),
+                'data': json.loads((lighthouse_result[1] if lighthouse_result and len(lighthouse_result) > 1 else '{}')),
+                'score': json.loads((lighthouse_result[2] if lighthouse_result and len(lighthouse_result) > 2 else '{}')),
             }
         }, 200
     else:
@@ -181,9 +181,9 @@ def check_history():
             "testID": row[0],
             "requestURL": row[1],
             "created": row[2],
-            "testScore": row[3],
-            "lighthouseScore": row[4],
-            "crawlScore": row[5]
+            "testScore": json.loads(row[3] or {}),
+            "lighthouseScore": json.loads(row[4] or {}),
+            "crawlScore": json.loads(row[5] or {}),
         })
 
     c.close()

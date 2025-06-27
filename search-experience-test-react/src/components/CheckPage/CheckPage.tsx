@@ -19,12 +19,12 @@ import Card from '@mui/joy/Card';
 import CircularProgress from '@mui/joy/CircularProgress';
 import Chip from '@mui/joy/Chip';
 import ChipDelete from '@mui/joy/ChipDelete';
+import Divider from '@mui/joy/Divider';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import FormHelperText from '@mui/joy/FormHelperText';
 import Grid from '@mui/joy/Grid';
 import Input from '@mui/joy/Input';
-import LinearProgress from '@mui/joy/LinearProgress';
 import Stack from '@mui/joy/Stack';
 import Step from '@mui/joy/Step';
 import StepIndicator from '@mui/joy/StepIndicator';
@@ -34,8 +34,7 @@ import Typography from '@mui/joy/Typography';
 let testChecker = setTimeout(() => {}, 0);
 
 const defaultSearchTerms = [
-	'apply',
-	'parking',
+	'about',
 ];
 
 function CheckPage() {
@@ -137,11 +136,14 @@ function CheckPage() {
 		<Stack spacing={2} alignItems="center">
 			{checkSuccess === undefined && loading === false && (
 				<Stack alignItems="center" spacing={3}>
-					<Stack sx={{maxWidth: 600, textAlign: 'center'}} spacing={1}>
-						<Typography level="h1">Search Experience Test</Typography>
-					</Stack>
 					<Card size="lg" sx={{minWidth: 400, maxWidth: 600}}>
 						<Stack spacing={2}>
+							<Stack spacing={1}>
+								<Typography level="h1">Search Experience Test</Typography>
+								<Typography level="body-sm">
+									Test your website to see how easily visitors can discover your site search page and find content on your website
+								</Typography>
+							</Stack>
 							<FormControl>
 								<FormLabel>
 								  Search Page URL
@@ -221,14 +223,6 @@ function CheckPage() {
 				</Stack>
 			)}
 			<Stack spacing={1}>
-				{loading && (
-					<Stack sx={{margin: 'auto', minWidth: 500}} spacing={3}>
-						<Typography>
-							Checking your page
-						</Typography>
-						<LinearProgress variant="soft" />
-					</Stack>
-				)}
 				{checkSuccess === true && (
 					pageData === undefined ? (
 						<Alert>
@@ -242,12 +236,12 @@ function CheckPage() {
 					)
 					: (
 						<Stack spacing={2}>
-							<Alert variant="plain">
+							<Card>
 								<Stack spacing={2} sx={{width: '100%'}}>
 									<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
 										<Stack alignItems="center" justifyContent="center" spacing={1}>
 											<Typography level="h4">
-												Site Search Experience
+												Search Experience Test
 											</Typography>
 										</Stack>
 										<Box sx={{flexGrow: 1}}>
@@ -261,11 +255,11 @@ function CheckPage() {
 												</AspectRatio>
 											)}
 											<Typography>
-												{`${requestURL.replace('https://', '').replace(/\/\.*\//,'')}`}
+												{`${pageData?.search?.data?.searchpage?.startURL.replace('https://', '').replace(/\/\.*\//,'')}`}
 											</Typography>
 										</Stack>
 										</Box>
-										<Box sx={{width: 200}}>
+										<Box sx={{width: 200, textAlign: 'right'}}>
 											<Button
 												variant="plain"
 												onClick={reset}
@@ -369,7 +363,7 @@ function CheckPage() {
 										</Stack>
 									</Stack>
 								</Stack>
-							</Alert>
+							</Card>
 							{currentStep == 1 && (<SearchStart pageData={pageData} />)}
 							{currentStep === 2 && (
 								<SearchResults
@@ -383,15 +377,17 @@ function CheckPage() {
 											Search Relevance
 										</Typography>
 									</Grid>
-									{pageData?.search?.data?.searchpage?.searchURL && (
-										pageData?.search?.data?.searchQuality.map((keywordData: any, index: number) => (
-											<KeywordRelevance
-												key={index}
-												pageData={pageData}
-												relevanceData={keywordData}
-											/>
-										))
-									)}
+									<Stack divider={<Divider />} spacing={1}>
+										{pageData?.search?.data?.searchpage?.searchURL && (
+											pageData?.search?.data?.searchQuality.map((keywordData: any, index: number) => (
+												<KeywordRelevance
+													key={index}
+													pageData={pageData}
+													relevanceData={keywordData}
+												/>
+											))
+										)}
+									</Stack>
 								</Grid>
 							)}
 							<Box sx={{display: currentStep === 4 ? 'block': 'none'}}>

@@ -225,11 +225,12 @@ class searchTester:
                 body_text = await page.inner_text("body")
                 await browser.close()
                 
-                response = self.checkRelevance(f"For the search query '{searchTerm}' how relevant are these results? {body_text}")
+                response = self.checkRelevance(f"For a site visitor searching with this search query: '{searchTerm}' how relevant are these site search results? {body_text}")
                 
                 try:
                     data = json.loads(response, strict=False)
                     self.searchQuality.append({
+                        'searchURL': url,
                         'query': searchTerm,
                         'quality': data,
                     })
@@ -302,7 +303,7 @@ class searchTester:
             stream = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are evaluating the relevancy of a site search result page. You need to determine if the search results are relevant for a given search query, rate the relevancy of the results from 1 to 10, and recommend any additional results or search features that would be helpful for the search keyword. Only return text strings for the relevance summary and list of recommendations and an integer for the relevancy score. Please return a valid JSON file that includes a 'relevance_summary' field, 'relevancy_score' field, and 'page_recommendations' field that includes a list of three recommendations."},
+                    {"role": "system", "content": "You are evaluating the relevancy and quality of a website's site search result page. You need to determine if the search results are relevant for a given search query and how satisfied a site visitor might be with the results, rate the relevancy of the results from 1 to 10, and recommend any additional results or search features that would be helpful for the search keyword. Only return text strings for the relevance summary and list of recommendations and an integer for the relevancy score. Please return a valid JSON file that includes a 'relevance_summary' field, 'relevancy_score' field, and 'page_recommendations' field that includes a list of three recommendations."},
                     {"role": "user", "content": prompt},
                 ],
                 response_format={ "type": "json_object" },

@@ -3,6 +3,7 @@ import { useState } from 'react'
 // Joy
 import Alert from '@mui/joy/Alert';
 import Box from '@mui/joy/Box';
+import Card from '@mui/joy/Card';
 import Checkbox from '@mui/joy/Checkbox';
 import CircularProgress from '@mui/joy/CircularProgress';
 import Divider from '@mui/joy/Divider';
@@ -85,7 +86,7 @@ function SearchScore(props: {
 									pageData?.lighthouse?.data?.seo > 0.9
 									? 'success'
 									: pageData?.lighthouse?.data?.seo > 0.7
-									? 'warning' : 'danger'
+									? 'neutral' : 'danger'
 								}
 							/>
 						</Grid>
@@ -107,7 +108,7 @@ function SearchScore(props: {
 									pageData?.lighthouse?.data?.performance > 0.9
 									? 'success'
 									: pageData?.lighthouse?.data?.performance > 0.7
-									? 'warning' : 'danger'
+									? 'neutral' : 'danger'
 								}
 							/>
 						</Grid>
@@ -168,7 +169,7 @@ function SearchScore(props: {
 									pageData?.lighthouse?.data?.accessibility > 0.9
 									? 'success'
 									: pageData?.lighthouse?.data?.accessibility > 0.7
-									? 'warning' : 'danger'
+									? 'neutral' : 'danger'
 								}
 							/>
 						</Grid>
@@ -275,18 +276,18 @@ function SearchScore(props: {
 											determinate
 											value={keywordData?.quality?.relevancy_score * 10}
 											color={
-												keywordData?.quality?.relevancy_score > 9
+												keywordData?.quality?.relevancy_score > 8
 												? 'success'
-												: keywordData?.quality?.relevancy_score > 7
-												? 'warning' : 'danger'
+												: keywordData?.quality?.relevancy_score > 5
+												? 'neutral' : 'danger'
 											}
 										/>
 									</Grid>
 									<Grid xs={1}>
 										<Typography sx={{textAlign: 'right'}}>
 											{keywordData?.quality?.relevancy_score > 8
-												? keywordData?.quality?.relevancy_score > 7
-												? 'High' : 'Medium': 'Low'
+												? keywordData?.quality?.relevancy_score > 5
+												? 'High' : 'Low': 'Medium'
 											}
 										</Typography>
 									</Grid>
@@ -381,6 +382,8 @@ function SearchScore(props: {
 						</Grid>
 					</Grid>
 				</Stack>
+			</Stack>
+			<Card sx={{my: 5}}>
 				<Stack direction="row">
 					<Grid container xs={12} alignItems="center">
 						<Grid xs={8}>
@@ -394,10 +397,10 @@ function SearchScore(props: {
 								size="lg"
 								value={searchScore}
 								color={
-									searchScore > 90
+									searchScore > 85
 									? 'success'
-									: searchScore > 70
-									? 'warning' : 'danger'
+									: searchScore > 60
+									? 'neutral' : 'danger'
 								}
 							>
 							  {(searchScore).toFixed(0)}
@@ -405,7 +408,7 @@ function SearchScore(props: {
 						</Grid>
 					</Grid>
 				</Stack>
-			</Stack>
+			</Card>
 		</Box>
   )
 }

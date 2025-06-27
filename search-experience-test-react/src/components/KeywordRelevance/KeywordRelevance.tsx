@@ -1,6 +1,7 @@
 // Joy
 import AspectRatio from '@mui/joy/AspectRatio';
 import Box from '@mui/joy/Box';
+import Chip from '@mui/joy/Chip';
 import Grid from '@mui/joy/Grid';
 import LinearProgress from '@mui/joy/LinearProgress';
 import Stack from '@mui/joy/Stack';
@@ -23,9 +24,26 @@ function KeywordRelevance(props: {
 						{pageData?.search?.data?.searchpage?.searchURL && (
 							<Grid xs={12}>
 								<Grid xs={12}>
-									<Typography level="title-md">
-										Search results for "{relevanceData.query}"
-									</Typography>
+									<Stack direction="row">
+										<Typography level="title-md">
+											Search results for "
+										</Typography>
+										<Chip
+								      component="a"
+								      href={relevanceData.searchURL}
+								      target="_blank"
+								      rel="noopener noreferrer"
+								      sx={{
+								        whiteSpace: 'normal',
+								        wordBreak: 'break-word'
+								      }}
+								    >
+											{relevanceData.query}
+										</Chip>
+										<Typography level="title-md">
+											"
+										</Typography>
+									</Stack>
 								</Grid>
 								<Grid container xs={12}>
 									<Stack>

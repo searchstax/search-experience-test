@@ -8,7 +8,7 @@ services:
       target: builder
       shm_size: '2gb'
     ports:
-      - 5000:5000
+      - "127.0.0.1:5000:5000"
     stop_signal: SIGINT
     environment:
       - FLASK_SERVER_PORT=5000
@@ -25,12 +25,11 @@ services:
       - ./search-experience-test-flask:/src
     networks:
       - internal
-      - external
   search-experience-test-react:
     container_name: search-experience-test-react
     hostname: search-experience-test-react
     ports:
-      - 3000:3000
+      - "127.0.0.1:3000:3000"
     build:
       context: ./search-experience-test-react
       dockerfile: Dockerfile
@@ -50,7 +49,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - ./search-experience-test-postgres:/docker-entrypoint-initdb.d
     networks:
@@ -97,7 +96,7 @@ services:
   search-experience-test-redis:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - ./search-experience-test-redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     networks:
@@ -116,6 +115,7 @@ services:
       options:
         max-size: "50m"
     networks:
+      - internal
       - external
 networks:
   external:
